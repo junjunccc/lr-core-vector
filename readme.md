@@ -49,4 +49,46 @@ READ of size 4 at 0x... thread T0
 
 ## 实现思路
 
-待完成……
+我的函数一共有 14 个，如下
+
+1. `vector_init`
+   需要思考的部分如下
+   `capacity` 为 `0` 时不分配内存，因为 `malloc(0)` 为实现定义行为
+   `capacity > SIZE_MAX / sizeof(int)` 不能转化成乘法，不然可能回绕
+   后文不再阐述类似的问题
+2. `vector_destroy`
+   记得先 `free(v->data)`
+3. `size`
+   先特判空指针
+   然后 `size` 就是 `v->data` 到 `v->end` 的距离，记得转化类型为 `size_t`
+4. `capacity`
+   类似 `size`，将 `v->end` 改为 `v->cap`
+5. `empty`
+   判断 `size` 是否为 `0`
+6. `get`
+   特判 `index >= size(v)`
+7. `set`
+   和 `get` 差不多
+8. `front`
+   先特判 `empty`，然后 `get` 第 `0` 个元素
+9. `back`
+   和 `front` 差不多，`get` 第 `size(v)-1` 个元素
+10. `push_back`
+    这里要用到后面的 `reserve`
+    注意 `old_cap == 0` 时，将 `new_cap` 赋值为 `1`
+    内存管理的关键点在后文的 `reserve` 中
+11. `pop_back`
+    特判 `empty`
+    先用 `back` 获得最后一个元素，然后 `v->end--;` 去掉最后一个元素
+12. `reserve`
+    唯二有技术含量的函数之一
+    注意 `capacity` 变量重名了，得改
+    先特判 `new_cap` 的大小是否不符合条件
+    在 `realloc` 时，可以注意到必须新建指针 `*p` 防止内存管理中遇到 `realloc` 失败并返回空指针，无法释放原本地址的内存
+13. `shrink_to_fit`
+    唯二有技术含量的函数之一
+    如果 `size(v) == 0` 则 `vector_destroy(v);`
+    若 `size == capacity(v)` 则无需操作
+    否则直接 `realloc` 并修改 `*v` 的其他成员，参见 `reserve` 中的注意事项
+14. `clear`
+    将 `size` 清零只需将 `v->end` 赋值为 `v->data`
